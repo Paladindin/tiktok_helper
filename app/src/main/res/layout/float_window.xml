@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <TextView
+
+        android:id="@+id/tv_back"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:gravity="center"
+        android:text="返回"
+        android:background="#990099cc"/>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="60dp"
+        android:background="#99ffffff"/>
+
+    <TextView
+
+        android:id="@+id/tv_start"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:gravity="center"
+        android:text="开始"
+        android:background="#990099cc"/>
+
+
+</LinearLayout>

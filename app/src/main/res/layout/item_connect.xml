@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:background="@color/color_white"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp">
+
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:src="@mipmap/ic_tiktok"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:text="抖音号:123456"
+        android:textColor="@color/color_black"
+        android:textSize="15sp"
+        app:layout_constraintLeft_toRightOf="@id/iv_avatar"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tv_type"
+        app:layout_constraintVertical_chainStyle="spread"
+        android:layout_marginTop="10dp"/>
+
+    <TextView
+        android:id="@+id/tv_type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="类型:美食"
+        android:textColor="@color/color_black"
+        android:textSize="14sp"
+        app:layout_constraintLeft_toLeftOf="@id/tv_id"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_id"
+        android:layout_marginBottom="10dp"/>
+
+    <ImageView
+        android:id="@+id/iv_select"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/selector_ic_selected"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
