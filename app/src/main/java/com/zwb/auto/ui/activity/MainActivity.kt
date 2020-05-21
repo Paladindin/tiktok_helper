@@ -2,12 +2,14 @@ package com.zwb.auto.ui.activity
 
 import android.content.Intent
 import android.os.Handler
+import android.util.Log
 import android.util.SparseArray
 import android.view.Gravity
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
+import com.gyf.immersionbar.ImmersionBar
 import com.lzf.easyfloat.EasyFloat
 import com.lzf.easyfloat.enums.ShowPattern
 import com.lzf.easyfloat.enums.SidePattern
@@ -40,11 +42,13 @@ class MainActivity : BaseActivity() {
             .setShowPattern(ShowPattern.ALL_TIME)
             .setSidePattern(SidePattern.RESULT_SIDE)
             .setGravity(Gravity.CENTER)
-            .setLayout(R.layout.float_window, OnInvokeView {
-                it.findViewById<TextView>(R.id.tv_back).setOnClickListener {
-                    EasyFloat.hideAppFloat()
+            .setLayout(R.layout.float_window, OnInvokeView {floatView->
+                floatView.findViewById<TextView>(R.id.tv_back).setOnClickListener {
+                    floatView.findViewById<TextView>(R.id.tv_start)?.setText("开始")
+                    Handler().postDelayed({
+                        EasyFloat.hideAppFloat()
+                    },200)
                     App.getInstance().apply {
-                        it.findViewById<TextView>(R.id.tv_start)?.setText("开始")
                         setStartRun(false)
                         cancelCommand()
                         Handler().postDelayed({
@@ -52,14 +56,14 @@ class MainActivity : BaseActivity() {
                         }, 500)
                     }
                 }
-                it.findViewById<TextView>(R.id.tv_start).let {tvStart->
+                floatView.findViewById<TextView>(R.id.tv_start).let { tvStart ->
                     tvStart.setOnClickListener {
                         App.getInstance().apply {
                             setStartRun(!getStartRun())
-                            if (getStartRun()){
+                            if (getStartRun()) {
                                 tvStart.setText("结束")
                                 doCommand()
-                            }else {
+                            } else {
                                 tvStart.setText("开始")
                                 cancelCommand()
                             }
@@ -67,11 +71,26 @@ class MainActivity : BaseActivity() {
                     }
                 }
             })
+            .registerCallback {
+                createResult { isCreated, msg, view ->
+                    if (isCreated) {
+                        Handler().postDelayed({
+//                            if (EasyFloat.appFloatIsShow())
+                                EasyFloat.hideAppFloat()
+                        }, 100)
+                    }
+                }
+            }
             .show()
-        Handler().postDelayed({
-            EasyFloat.hideAppFloat()
-        },200)
+    }
 
+    override fun onResume() {
+        super.onResume()
+//        Handler().postDelayed({
+//            if (EasyFloat.appFloatIsShow())
+//                EasyFloat.hideAppFloat()
+//        }, 200)
+        App.getInstance().setNavBarHeight(ImmersionBar.getNavigationBarHeight(this))
     }
 
     override fun initView() {

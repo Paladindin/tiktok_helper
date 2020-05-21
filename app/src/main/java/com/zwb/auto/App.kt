@@ -39,6 +39,8 @@ class App : Application() {
 
     private lateinit var tvStart: TextView
 
+    private var mNavBarHeight: Int = 0
+
     companion object {
         private lateinit var instance: App
 
@@ -46,6 +48,15 @@ class App : Application() {
         fun getInstance(): App {
             return instance
         }
+
+    }
+
+    fun setNavBarHeight(height: Int){
+        mNavBarHeight = height
+    }
+
+    fun getNavBarHeight(): Int{
+        return mNavBarHeight
     }
 
     private fun initFloatWindow() {
@@ -187,6 +198,7 @@ class App : Application() {
 
     fun setService(paramAccessService: AccessService) {
         this.service = paramAccessService
+        CommandUtils.init(paramAccessService)
     }
 
     fun getService(): AccessService? {

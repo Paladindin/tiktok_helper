@@ -1,14 +1,17 @@
 package com.zwb.auto.utils
 
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Toast
 import com.zwb.auto.App
 import com.zwb.auto.bean.FunctionType
-import com.zwb.auto.ui.service.AccessService
-import com.zwb.auto.config.Constants
 import com.zwb.auto.bean.OperationDetail
 import com.zwb.auto.config.ConfigManager
+import com.zwb.auto.config.Constants
+import com.zwb.auto.ui.service.AccessService
 import kotlinx.coroutines.*
 
 
@@ -23,11 +26,16 @@ object CommandUtils {
     private var service: AccessService? = null
 
     init {
-        service = App.getInstance().getService()
+        if (service == null)
+            service = App.getInstance().getService()
     }
 
     private fun isStartRun(): Boolean {
         return App.getInstance().getStartRun()
+    }
+
+    fun init(service: AccessService?) {
+        this.service = service
     }
 
     fun doCommand(
@@ -37,7 +45,7 @@ object CommandUtils {
         operationCount: Int
     ) {
         if (service == null) {
-            ToastUtils.showShort(App.getInstance(), "服务为null")
+            ToastUtils.showShort(App.getInstance(), "服务为null,请前往设置中心重新开启无障碍辅助权限")
             return
         }
         if (!isStartRun()) {
@@ -107,8 +115,14 @@ object CommandUtils {
             }
             if (!startText.isNullOrEmpty()) {
                 ServiceUtils.clickView(startText[0])
-                sleep(1800)
+                sleep(2000)
             }
+            val cancelButtonList = ServiceUtils.findViewByEqualsText(service, "取消")
+            if (!cancelButtonList.isNullOrEmpty()) {
+                if (ServiceUtils.clickView(cancelButtonList[0]))
+                    sleep(1000)
+            }
+
         }
         if (isMessage) {
             val moreButton =
@@ -116,11 +130,11 @@ object CommandUtils {
             Log.e("zwb", "moreButton " + (moreButton == null))
             val b = ServiceUtils.clickView(moreButton)
             Log.e("zwb", "click moreButton $b")
-            sleep(1800)
+            sleep(2000)
             val messges = ServiceUtils.findViewByEqualsText(service, "发私信")
             messges?.let {
                 ServiceUtils.clickView(it[0])
-                sleep(1200)
+                sleep(1800)
             }
             val editText =
                 ServiceUtils.findViewByFirstClassName(service, Constants.CLASS_NAME_ET)
@@ -134,20 +148,15 @@ object CommandUtils {
                 ServiceUtils.clickView(it)
                 sleep(1500)
             }
-            service?.performBackClick()
-            sleep(1500)
+
+            ServiceUtils.goBack(service)
+            sleep(2000)
         }
     }
 
     private suspend fun sleep(millis: Long = 1000) {
-        try {
-            delay(millis)
-//            Thread.sleep(millis)
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
+        delay(millis)
     }
-
 
     private suspend fun assignCommand(
         operationType: OperationDetail.TYPE?,
@@ -236,7 +245,7 @@ object CommandUtils {
 
                 starAndSendMessage(isStar, isMessage)
 
-                service?.performBackClick()
+                ServiceUtils.goBack(service)
                 sleep(1000)
 
                 if (i == it.childCount - 1) {
@@ -298,16 +307,28 @@ object CommandUtils {
         while (true) {
             val starButton = ServiceUtils.findViewById(service, Constants.ID_TITLE)
             ServiceUtils.clickView(starButton)
-            sleep(1500)
+            sleep(3000)
 
             if (operationTarget == OperationDetail.TYPE.FANS_LIST) {
                 val fansList = ServiceUtils.findViewByEqualsText(service, "粉丝")
-                if (fansList.isNullOrEmpty()) return
+                if (fansList.isNullOrEmpty()) {
+                    ServiceUtils.goBack(service)
+                    sleep(1500)
+                    scrollHomeRecommend()
+                    recommendStarAndSendMessage(operationCount, operationTarget, isStar, isMessage)
+                    return
+                }
                 ServiceUtils.clickView(fansList[0])
-                sleep(2000)
+                sleep(2500)
             } else {
                 val starList = ServiceUtils.findViewByEqualsText(service, "关注")
-                if (starList.isNullOrEmpty()) return
+                if (starList.isNullOrEmpty()) {
+                    ServiceUtils.goBack(service)
+                    sleep(1500)
+                    scrollHomeRecommend()
+                    recommendStarAndSendMessage(operationCount, operationTarget, isStar, isMessage)
+                    return
+                }
                 var startButton: AccessibilityNodeInfo? = null
                 for (startText in starList) {
                     if (!startText.isClickable) {
@@ -315,9 +336,18 @@ object CommandUtils {
                     }
                 }
                 ServiceUtils.clickView(startButton)
-                sleep(2000)
+                sleep(2500)
             }
 
+            val moreButton =
+                ServiceUtils.findViewByFirstEqualsContentDescription(service, "更多")
+            if (moreButton != null) {
+                ServiceUtils.goBack(service)
+                sleep(1500)
+                scrollHomeRecommend()
+                recommendStarAndSendMessage(operationCount, operationTarget, isStar, isMessage)
+                return
+            }
             val rvList =
                 ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
             if (rvList.isNullOrEmpty() || rvList.size < 2) return
@@ -335,28 +365,31 @@ object CommandUtils {
                     Log.e("zwb", "Child $i is null" + (child == null))
                     if (child == null || !child.isClickable) continue
                     ServiceUtils.clickView(child)
-                    sleep(1500)
+                    sleep(2000)
 
                     starAndSendMessage(isStar, isMessage)
 
-                    service?.performBackClick()
-                    sleep(1500)
+                    ServiceUtils.goBack(service)
+                    sleep(2000)
                 }
             }
 
-            service?.performBackClick()
-            sleep(1000)
-            service?.performBackClick()
-            sleep(1000)
+            ServiceUtils.goBack(service)
+            sleep(1500)
+            ServiceUtils.goBack(service)
+            sleep(1500)
+            scrollHomeRecommend()
+            recommendStarAndSendMessage(operationCount, operationTarget, isStar, isMessage)
+        }
+    }
 
-            val viewPager =
-                ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_VP)
-            if (!viewPager.isNullOrEmpty()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//                    ServiceUtils.scrollView(service, viewPager.get(1))
-                    viewPager.get(1)?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-                    sleep(1500)
-                }
+    private suspend fun scrollHomeRecommend() {
+        val viewPager =
+            ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_VP)
+        if (!viewPager.isNullOrEmpty()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                viewPager[0]?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                sleep(2000)
             }
         }
     }
@@ -378,43 +411,46 @@ object CommandUtils {
      * 搜索关键词用户
      */
     suspend fun keywordStar(operationCount: Int) {
-        val count = Math.max(1, operationCount)
-
-        val searchEditTextList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
-        if (searchEditTextList.isNullOrEmpty()) {
-            return
-        }
-        val searchEditText = searchEditTextList[1] ?: return
-        ServiceUtils.clickView(searchEditText)
-        sleep(1000)
-//        searchEditText.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-//        searchEditText.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
-        ServiceUtils.setText(searchEditText, "美食")
-        sleep(2000)
-        val searchButton = ServiceUtils.findViewByEqualsText(service, "搜索")
-        Log.e("----", "searchButton size ${searchButton.size}")
-        if (searchButton.isNullOrEmpty() && searchButton[0] == null) {
-            return
-        }
-        ServiceUtils.clickView(searchButton[0])
-        val text = searchEditText.text
-        Log.e("----", "searchEditText $text")
-        sleep(2500)
-        val rvUserList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
-        rvUserList?.takeIf { it.size >= 2 }?.let {
-            for (i in 0 until it[1].childCount) {
-                if (i >= count) {
-                    break
-                }
-                val child = it[1].getChild(i) ?: continue
-                var listStar = ServiceUtils.findViewByEqualsText(child, "关注")
-                if (!listStar.isNullOrEmpty()) {
-                    listStar[0]?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    sleep(1800)
-                }
-            }
-        }
-
+//        val count = Math.max(1, operationCount)
+//        val searchEditTextList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
+//        if (searchEditTextList.isNullOrEmpty()) {
+//            return
+//        }
+//        val searchEditText = searchEditTextList[1] ?: return
+//        val rect = Rect()
+//        searchEditText.getBoundsInScreen(rect)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+//            Log.e("----","rect ${rect.toShortString()}")
+//            ServiceUtils.clickByGesture(service, rect.left + 200,rect.top + 25)
+//        } else {
+//            ToastUtils.showShort(App.getInstance(), "此功能需要android 7.0以上系统")
+//            return
+//        }
+//        sleep(1000)
+//        ServiceUtils.setText(searchEditText, ConfigManager.instance.getBatchUserList()[0])
+//        sleep(2000)
+//        val searchButton = ServiceUtils.findViewByEqualsText(service, "搜索")
+//        Log.e("----", "searchButton size ${searchButton.size}")
+//        if (searchButton.isNullOrEmpty() || searchButton[0] == null) {
+//            return
+//        }
+//        ServiceUtils.clickView(searchButton[0])
+//        sleep(3000)
+//        val rvUserList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
+//        rvUserList?.takeIf { it.size >= 2 }?.let {
+//            for (i in 0 until it[1].childCount) {
+//                if (i >= count) {
+//                    break
+//                }
+//                val child = it[1].getChild(i) ?: continue
+//                var listStar = ServiceUtils.findViewByEqualsText(child, "关注")
+//                if (!listStar.isNullOrEmpty()) {
+//                    listStar[0]?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+//                    sleep(1800)
+//                }
+//            }
+//        }
+        keywordStarAndSendMessage(operationCount, true, false)
     }
 
     suspend fun keywordSendMessage(operationCount: Int) {
@@ -427,27 +463,70 @@ object CommandUtils {
         isStar: Boolean,
         isMessage: Boolean
     ) {
+        val batchUserList = ConfigManager.instance.getBatchUserList()
         var count = Math.max(1, operationCount)
-        val searchEditTextList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
-        if (searchEditTextList.isNullOrEmpty()) {
-            return
-        }
-        val searchEditText = searchEditTextList[1] ?: return
-        ServiceUtils.clickView(searchEditText)
-        Log.e("-----", " ${searchEditText.isFocusable}  ${searchEditText.isFocused}")
-        searchEditText.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
-        searchEditText.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
-        searchEditText.performAction(AccessibilityNodeInfo.FOCUS_INPUT)
-        ServiceUtils.setText(searchEditText, "美食")
-        sleep(1000)
 
-        val searchButton = ServiceUtils.findViewByEqualsText(service, "搜索")
-        if (!searchButton.isNullOrEmpty() && searchButton[0] != null) {
-            ServiceUtils.clickView(searchButton[0])
-            sleep(2000)
-            searchListCommand(count, isStar, isMessage)
-        }
+        batchUserList.forEach {
+            val searchEditTextList =
+                ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
+            if (searchEditTextList.isNullOrEmpty()) {
+                return
+            }
+            val searchEditText = searchEditTextList[1] ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ServiceUtils.clickByGesture(service, searchEditText)
+            } else {
+                ToastUtils.showShort(App.getInstance(), "此功能需要android 7.0以上系统")
+                return
+            }
+            ServiceUtils.setText(searchEditText, it)
+            sleep(1000)
 
+            val searchButton = ServiceUtils.findViewByEqualsText(service, "搜索")
+            if (!searchButton.isNullOrEmpty() && searchButton[0] != null) {
+                ServiceUtils.clickView(searchButton[0])
+                sleep(3000)
+                val rvUserList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
+                rvUserList?.takeIf { it.size >= 2 }?.let {
+                    val rv = it[1]
+                    keywordLoopOperate(rv, 0, count, isStar, isMessage)
+                    sleep(2000)
+                }
+            }
+
+        }
+    }
+
+    private suspend fun keywordLoopOperate(
+        rv: AccessibilityNodeInfo,
+        operateCount: Int,
+        count: Int,
+        isStar: Boolean,
+        isMessage: Boolean
+    ) {
+        var operateCount1 = operateCount
+        for (i in 0 until rv.childCount) {
+            Log.e("----", "operateCount1 $operateCount1")
+            if (operateCount1++ >= count) {
+                break
+            }
+            Log.e("----", "operateCount1 $operateCount1 child ${rv.getChild(i) == null}")
+            val child = rv.getChild(i) ?: continue
+            ServiceUtils.clickView(child)
+            sleep(3000)
+
+            starAndSendMessage(isStar, isMessage)
+
+            ServiceUtils.goBack(service)
+
+            sleep(1500)
+
+            if (i == rv.childCount - 1) {
+                rv.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                sleep(2000)
+                keywordLoopOperate(rv, operateCount1, count, isStar, isMessage)
+            }
+        }
     }
 
     private suspend fun searchListCommand(
@@ -467,7 +546,7 @@ object CommandUtils {
 
                 starAndSendMessage(isStar, isMessage)
 
-                service?.performBackClick()
+                ServiceUtils.goBack(service)
                 sleep(1000)
 
                 if (i == it[1].childCount - 1) {
@@ -512,7 +591,7 @@ object CommandUtils {
             sleep(1500)
             starAndSendMessage(isStar, isMessage)
 
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1500)
 
             if (i == rvContact.childCount - 1) {
@@ -553,13 +632,13 @@ object CommandUtils {
                 val etList =
                     ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
                 if (!etList.isNullOrEmpty()) {
-                    service?.performBackClick()
+                    ServiceUtils.goBack(service)
                     sleep(1000)
                     ServiceUtils.clickByGesture(service, title)
                 }
                 sleep(1500)
                 starAndSendMessage(isStar, isMessage)
-                service?.performBackClick()
+                ServiceUtils.goBack(service)
                 sleep(1000)
                 if (i == it.childCount - 1) {
                     sleep(500)
@@ -618,9 +697,9 @@ object CommandUtils {
             sleep(2000)
             starAndSendMessage(isStar, isMessage)
             sleep(1000)
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1500)
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1000)
             if (i == childList.lastIndex) {
                 Log.e("zwb", "ACTION_SCROLL_FORWARD")
@@ -643,17 +722,51 @@ object CommandUtils {
     }
 
     private suspend fun commentSameCityList() {
-        val rvList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
-        if (rvList.isNullOrEmpty())
-            return
-        var rv = rvList[0]
-        Log.e("---", "rv child ${rv.childCount}")
-        for (i in 0 until rv.childCount) {
-            val child = rv.getChild(i)
-            if (child == null || !child.isClickable) continue
-            ServiceUtils.clickView(child)
-            sleep(1500)
-            commentRecommendVideo()
+
+        val screenHeight = UiUtils.getScreenHeight2(App.getInstance())
+        val navBarHeight = App.getInstance().getNavBarHeight()
+        val clickY = UiUtils.getScreenHeight2(App.getInstance()) - UiUtils.dp2px(App.getInstance(), 25) - navBarHeight
+        val clickX = UiUtils.dp2px(App.getInstance(), 35)
+        Log.e("----","screenHeight ${screenHeight}")
+        Thread {
+            Looper.prepare()
+            ToastUtils.showLong(App.getInstance(),"屏幕高度 ${screenHeight} 导航栏高度 ${navBarHeight} \n 点击区域坐标  ${clickX}:${clickY}")
+            Looper.loop()
+        }.start()
+        ServiceUtils.clickByGesture(
+            service, clickX,
+            clickY
+        )
+        sleep(2000)
+        val etList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
+        if (etList.isNullOrEmpty()) return
+        ServiceUtils.setText(etList[0], ConfigManager.instance.getGreetWord())
+        sleep(1500)
+
+        val ivList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_IV)
+        if (ivList.isNullOrEmpty()) return
+        var sendIv: AccessibilityNodeInfo
+        var isLive = false
+        if (ivList.size > 2) {
+            sendIv = ivList[2]
+            isLive = false
+        } else {
+            sendIv = ivList[1]
+            isLive = true
+        }
+        if (ServiceUtils.clickView(sendIv)) {
+            sleep(3000)
+            if (isLive) {
+                ServiceUtils.goBack(service)
+                sleep(2000)
+            }
+            ServiceUtils.scrollViewVertical(
+                service,
+                UiUtils.getScreenWidth(App.getInstance()) / 3,
+                UiUtils.getScreenHeight(App.getInstance()) / 2
+            )
+            sleep(5000)
+            commentSameCityList()
         }
     }
 
@@ -662,10 +775,10 @@ object CommandUtils {
         if (tvSayList.isNullOrEmpty()) {
             ServiceUtils.scrollViewVertical(
                 service,
-                UiUtils.getScreenWidth(App.getInstance()) / 2,
+                UiUtils.getScreenWidth(App.getInstance()) / 4,
                 UiUtils.getScreenHeight(App.getInstance()) / 2
             )
-            sleep(2000)
+            sleep(4000)
             commentLiveSquare()
         } else if (ServiceUtils.clickView(tvSayList[0])) {
             sleep(1500)
@@ -681,7 +794,7 @@ object CommandUtils {
             }
             if (ServiceUtils.clickView(ivList[1])) {
                 sleep(1000)
-                service?.performBackClick()
+                ServiceUtils.goBack(service)
                 sleep(1500)
                 val vpList =
                     ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_VP)
@@ -711,8 +824,25 @@ object CommandUtils {
 //        }
         ServiceUtils.clickByGesture(
             service, UiUtils.getScreenWidth(App.getInstance()) / 2,
-            UiUtils.getScreenHeight(App.getInstance()) - 30
+            UiUtils.getScreenHeight(App.getInstance()) - UiUtils.dp2px(App.getInstance(), 25)
         )
+        sleep(1500)
+        val etList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
+        if (etList.isNullOrEmpty()) return
+        ServiceUtils.setText(etList[0], ConfigManager.instance.getGreetWord())
+        sleep(1500)
+        val ivList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_IV)
+        if (ivList.isNullOrEmpty() || ivList.size < 3) return
+        if (ServiceUtils.clickView(ivList[2])) {
+            sleep(1500)
+            ServiceUtils.scrollViewVertical(
+                service,
+                UiUtils.getScreenWidth(App.getInstance()) / 4,
+                UiUtils.getScreenHeight(App.getInstance()) / 2
+            )
+            sleep(4000)
+            commentWorksOfUser()
+        }
     }
 
     private suspend fun commentRecommendVideo() {
@@ -726,7 +856,7 @@ object CommandUtils {
                 return
             }
             val commentEditText = commentEditTextList[0] ?: return
-            ServiceUtils.setText(commentEditText, "哎哟不错")
+            ServiceUtils.setText(commentEditText, ConfigManager.instance.getGreetWord())
             ServiceUtils.clickView(commentEditText)
             sleep(1500)
             val ivList =
@@ -735,7 +865,7 @@ object CommandUtils {
             if (ivList.size < 3) return
             ServiceUtils.clickView(ivList[2])
             sleep(1500)
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1000)
         }
         val viewPager =
@@ -771,10 +901,9 @@ object CommandUtils {
                 ServiceUtils.clickView(ivList[0])
                 sleep(1500)
 
-                val editText =
-                    ServiceUtils.findViewByFirstClassName(service, Constants.CLASS_NAME_ET)
-
                 if (isWord) {
+                    val editText =
+                        ServiceUtils.findViewByFirstClassName(service, Constants.CLASS_NAME_ET)
                     editText?.let { et ->
                         ServiceUtils.setText(et, ConfigManager.instance.getGreetWord())
                         sleep(1500)
@@ -783,41 +912,42 @@ object CommandUtils {
                         ServiceUtils.findViewByFirstEqualsContentDescription(service, "发送")
                     send?.let { sd ->
                         ServiceUtils.clickView(sd)
-                        sleep(1500)
+                        sleep(2500)
                     }
                 }
                 if (isPicture) {
-                    //老版本的发送图片
-                    /*val ivPicture =
-                        ServiceUtils.findViewByFirstEqualsContentDescription(service, "图片")
-                    ivPicture?.let { ip ->
-                        ServiceUtils.clickView(ip)
-                        sleep(1500)
-                    }
-                    val rvPicList =
-                        ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
-                    val rvPicture = rvPicList?.takeIf { it.size > 1 }?.get(1)
-                    rvPicture?.getChild(0)?.getChild(1)
-                        ?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    sleep(1000)
-                    val send =
-                        ServiceUtils.findViewByContainsText(service, "发送")
-                    send?.takeIf { !it.isEmpty() }?.let {
-                        ServiceUtils.clickView(it[0])
-                        sleep(1000)
-                    }*/
-                    editText?.parent?.parent?.takeIf { it.childCount >= 3 }?.getChild(2).let {
-                        ServiceUtils.clickView(it)
-                        sleep(1500)
-                        val tvPhoto = ServiceUtils.findViewByEqualsText(service, "照片")
-                        if (!tvPhoto.isNullOrEmpty()) {
-                            ServiceUtils.clickView(tvPhoto[0])
+                    ServiceUtils.clickByGesture(
+                        service,
+                        UiUtils.getScreenWidth(App.getInstance()) - UiUtils.dp2px(
+                            App.getInstance(),
+                            20
+                        ),
+                        UiUtils.getScreenHeight(App.getInstance()) - UiUtils.dp2px(
+                            App.getInstance(),
+                            35
+                        )
+                    )
+                    sleep(1500)
+                    val tvPhoto = ServiceUtils.findViewByEqualsText(service, "照片")
+                    if (!tvPhoto.isNullOrEmpty()) {
+                        ServiceUtils.clickView(tvPhoto[0])
+                        sleep(2000)
+                        val rvPhotoList =
+                            ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
+                        rvPhotoList?.get(0)?.getChild(0)?.takeIf { it.childCount >= 2 }?.apply {
+                            ServiceUtils.clickView(getChild(1))
+                            sleep(2000)
+                            ServiceUtils.findViewByContainsText(service, "发送")?.let {
+                                ServiceUtils.clickView(it[0])
+                                sleep(2000)
+                                ServiceUtils.goBack(service)
+                                sleep(2000)
+                            }
                         }
                     }
-
                 }
-                service?.performBackClick()
-                sleep(1000)
+                ServiceUtils.goBack(service)
+                sleep(2500)
                 if (i == it.childCount - 1) {
                     sleep(500)
                     it.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
@@ -867,7 +997,7 @@ object CommandUtils {
             ServiceUtils.clickView(send)
             sleep(1500)
 
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1500)
             if (i == childList.lastIndex) {
                 sleep(500)
@@ -885,9 +1015,39 @@ object CommandUtils {
             ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_VP)
         if (!viewPager.isNullOrEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                while (operateCount-- > 0) {
-                    viewPager[0]?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                while (true) {
+                    ServiceUtils.doubleClickView(
+                        service,
+                        UiUtils.getScreenWidth(App.getInstance()) / 2,
+                        UiUtils.getScreenHeight(App.getInstance()) / 5 * 2
+                    )
                     sleep(1500)
+
+                    val commentButton =
+                        ServiceUtils.findViewByFirstContainsContentDescription(service, "评论")
+                    if (ServiceUtils.clickView(commentButton)) {
+                        sleep(1500)
+                        val commentEditTextList =
+                            ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_ET)
+                        if (commentEditTextList.isNullOrEmpty()) {
+                            return
+                        }
+                        val commentEditText = commentEditTextList[0] ?: return
+                        ServiceUtils.setText(commentEditText, ConfigManager.instance.getGreetWord())
+                        ServiceUtils.clickView(commentEditText)
+                        sleep(1500)
+                        val ivList =
+                            ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_IV)
+                        Log.e("-----", "ivList ${ivList.size}")
+                        if (ivList.size < 3) return
+                        ServiceUtils.clickView(ivList[2])
+                        sleep(1500)
+                        ServiceUtils.goBack(service)
+
+                        sleep(1000)
+                        viewPager[0]?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                        sleep(3000)
+                    }
                 }
             }
         }
@@ -907,6 +1067,23 @@ object CommandUtils {
             OperationDetail.TYPE.CURRENT_WORK_COMMENTER -> {
                 pariseCurrentWorkCommenter()
             }
+            OperationDetail.TYPE.LIVE -> {
+                pariseLive()
+            }
+        }
+    }
+
+    private suspend fun pariseLive() {
+        while (true) {
+            if (!isStartRun()) {
+                break
+            }
+            ServiceUtils.doubleClickView(
+                service,
+                UiUtils.getScreenWidth(App.getInstance()) / 2,
+                UiUtils.getScreenHeight(App.getInstance()) / 5 * 2
+            )
+            sleep(500)
         }
     }
 
@@ -920,10 +1097,10 @@ object CommandUtils {
             sleep(2000)
             ServiceUtils.scrollViewVertical(
                 service,
-                UiUtils.getScreenWidth(App.getInstance()) / 2,
+                UiUtils.getScreenWidth(App.getInstance()) / 3,
                 UiUtils.getScreenHeight(App.getInstance()) / 2
             )
-            sleep(3000)
+            sleep(4000)
         }
     }
 
@@ -982,8 +1159,9 @@ object CommandUtils {
                 if (!viewPager.isNullOrEmpty()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //                        ServiceUtils.scrollView(service, viewPager.get(0))
-                        viewPager.get(0)?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-                        sleep(2500)
+                        viewPager.get(0)
+                            ?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                        sleep(3000)
                     }
                 }
                 continue
@@ -992,7 +1170,7 @@ object CommandUtils {
             sleep(1500)
             starAndSendMessage(false, true)
 
-            service?.performBackClick()
+            ServiceUtils.goBack(service)
             sleep(1500)
 
             val viewPager =
@@ -1001,7 +1179,7 @@ object CommandUtils {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //                    ServiceUtils.scrollView(service, viewPager.get(0))
                     viewPager.get(0)?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
-                    sleep(2500)
+                    sleep(3000)
                 }
             }
         }
@@ -1016,31 +1194,50 @@ object CommandUtils {
     }
 
     private suspend fun sameCityUserStarAndSendMessage(isStar: Boolean, isMessage: Boolean) {
-        while (true) {
-            if (!App.getInstance().getStartRun()) {
-                break
-            }
-            ServiceUtils.scrollViewHorizontal(
-                service,
-                UiUtils.getScreenWidth(App.getInstance()) / 3 * 2,
-                UiUtils.getScreenHeight(App.getInstance()) / 2
-            )
-            sleep(3000)
-            val moreButton =
-                ServiceUtils.findViewByFirstEqualsContentDescription(service, "更多")
-            if (moreButton != null) {
-                starAndSendMessage(isStar, isMessage)
-                service?.performBackClick()
-                sleep(2000)
-            }
-            ServiceUtils.scrollViewVertical(
-                service,
-                UiUtils.getScreenWidth(App.getInstance()) / 2,
-                UiUtils.getScreenHeight(App.getInstance()) / 2
-            )
-            sleep(3000)
+//        val rvList = ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
+//        if (rvList.isNullOrEmpty()){
+//            return
+//        }
+//        val rv = rvList[0]
+//        var entrance = rv.getChild(0)
+//        if (entrance?.isClickable != true){
+//            entrance = rv.getChild(1)
+//        }
+//        ServiceUtils.clickView(entrance)
+//        sleep(3000)
 
+        ServiceUtils.scrollViewHorizontal(
+            service,
+            UiUtils.getScreenWidth(App.getInstance()) / 3 * 2,
+            UiUtils.getScreenHeight(App.getInstance()) / 2
+        )
+        sleep(3000)
+        val moreButton =
+            ServiceUtils.findViewByFirstEqualsContentDescription(service, "更多")
+        var starTvList = ServiceUtils.findViewByContainsText(service, "关注")
+        if (starTvList.isNullOrEmpty()) {
+            sleep(1000)
+            val rootInActiveWindow = service?.rootInActiveWindow
+            if (rootInActiveWindow == null) {
+                ServiceUtils.goBack(service)
+                sleep(2000)
+                sameCityUserStarAndSendMessage(isStar, isMessage)
+                return
+            }
         }
+        Log.e("-----", "starTvList ${starTvList.isNullOrEmpty()}")
+        if (!starTvList.isNullOrEmpty()) {
+            starAndSendMessage(isStar, isMessage)
+            ServiceUtils.goBack(service)
+            sleep(2000)
+        }
+        ServiceUtils.scrollViewVertical(
+            service,
+            UiUtils.getScreenWidth(App.getInstance()) / 3,
+            UiUtils.getScreenHeight(App.getInstance()) / 2
+        )
+        sleep(4000)
+        sameCityUserStarAndSendMessage(isStar, isMessage)
     }
 
     private suspend fun batchStarCommand(operationType: OperationDetail.TYPE?) {
@@ -1070,7 +1267,8 @@ object CommandUtils {
             Log.e("zwb", "getChildCount " + rv.childCount)
             for (i in 0 until rv.childCount) {
                 val child = rv.getChild(i) ?: continue
-                var listStar = ServiceUtils.findViewByEqualsText(child, if (isStar) "关注" else "已关注")
+                var listStar =
+                    ServiceUtils.findViewByEqualsText(child, if (isStar) "关注" else "已关注")
                 if (listStar.isNullOrEmpty()) {
                     listStar =
                         ServiceUtils.findViewByEqualsText(child, if (isStar) "回关" else "互相关注")

@@ -161,6 +161,7 @@ class HomeFragment : BaseFragment() {
                         }
 
                     })
+                    .setAnimStyle(R.style.normalAnimationDialog)
                     .setMargin(50)
                     .setDimAmout(0.6f)
                     .showAllowingStateLoss(fragmentManager)
@@ -183,6 +184,7 @@ class HomeFragment : BaseFragment() {
                         }
 
                     })
+                    .setAnimStyle(R.style.normalAnimationDialog)
                     .setMargin(50)
                     .setDimAmout(0.6f)
                     .showAllowingStateLoss(fragmentManager)
@@ -213,6 +215,7 @@ class HomeFragment : BaseFragment() {
                         }
 
                     })
+                    .setAnimStyle(R.style.normalAnimationDialog)
                     .setMargin(50)
                     .setDimAmout(0.6f)
                     .showAllowingStateLoss(fragmentManager)
@@ -261,6 +264,7 @@ class HomeFragment : BaseFragment() {
                         .showAllowingStateLoss(fragmentManager)
                 }
             })
+            .setAnimStyle(R.style.normalAnimationDialog)
             .setMargin(50)
             .setDimAmout(0.6f)
             .showAllowingStateLoss(fragmentManager)

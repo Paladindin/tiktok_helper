@@ -60,7 +60,7 @@ enum class OperationDetail {
         override fun title() = "操作类型"
 
         override fun type(): List<TYPE> {
-            return mutableListOf(TYPE.HOME_RECOMMEND_VDIEO,TYPE.PERSONAL_ALL_VIDEO,TYPE.SAME_CITY_VIDEO,TYPE.CURRENT_WORK_COMMENTER)
+            return mutableListOf(TYPE.HOME_RECOMMEND_VDIEO,TYPE.PERSONAL_ALL_VIDEO,TYPE.SAME_CITY_VIDEO,TYPE.CURRENT_WORK_COMMENTER,TYPE.LIVE)
         }
     },
 
@@ -138,14 +138,18 @@ enum class OperationDetail {
             override fun desc() = "首页推荐视频"
         },
         PERSONAL_ALL_VIDEO{
-            override fun desc() = "个人所有视频的第一个视频"
+            override fun desc() = "指定用户所有作品"
         },
         SAME_CITY_VIDEO{
-            override fun desc() = "同城的第一个视频"
+            override fun desc() = "同城列表"
         },
         CURRENT_WORK_COMMENTER{
             override fun desc() = "当前作品的评论列表"
         },
+        LIVE{
+            override fun desc() = "直播间"
+        },
+
 
         BATCH_STAR{
             override fun desc() = "批量关注"

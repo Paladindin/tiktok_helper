@@ -61,4 +61,6 @@ dependencies {
     implementation 'com.squareup.okhttp3:logging-interceptor:3.10.0'
     //wheelView
     implementation 'com.weigan:loopView:0.2.2'
+    //webview
+    implementation 'com.just.agentweb:agentweb:4.0.2'
 }

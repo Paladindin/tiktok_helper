@@ -17,6 +17,7 @@ class ConfigManager private constructor() {
         const val KEY_GREET_WORD = "key_greet_word"
         const val KEY_BATCH_USER = "key_batch_user"
         const val KEY_TRAIN_CONFIG = "key_train_config"
+        const val KEY_DATA_CONFIG = "key_data_config"
         @JvmStatic
         val instance: ConfigManager by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
             ConfigManager()
@@ -41,7 +42,8 @@ class ConfigManager private constructor() {
         PreferencesUtil.saveValue(KEY_GREET_WORD, greetWordStr)
     }
 
-    fun getGreetWord(isRandom: Boolean = false): String {
+    fun getGreetWord(): String {
+        var isRandom = getDataConfig().greetWordRandom
         var greetWord = "你好"
         val greetWordList = getGreetWordList()
         if (!greetWordList.isEmpty()) {
@@ -60,8 +62,12 @@ class ConfigManager private constructor() {
 
     fun getBatchUserList(): List<String> {
         val batchUserList = ArrayList<String>()
+
         getBatchUserStr().takeIf { it.isNotEmpty() }?.let {
             batchUserList.addAll(it.split("%"))
+        }
+        if (batchUserList.isEmpty()){
+            batchUserList.add("美食")
         }
         return batchUserList
     }
@@ -87,4 +93,20 @@ class ConfigManager private constructor() {
             PreferencesUtil.saveValue(KEY_TRAIN_CONFIG, it)
         }
     }
+
+    fun saveTrainConfig(dataConfig: DataConfig) {
+        Gson().toJson(dataConfig)?.let {
+            PreferencesUtil.saveValue(KEY_DATA_CONFIG, it)
+        }
+    }
+
+    fun getDataConfig(): DataConfig {
+        val trainConfigStr = PreferencesUtil.getString(KEY_DATA_CONFIG)
+        if (!TextUtils.isEmpty(trainConfigStr)) {
+            return Gson().fromJson(trainConfigStr, DataConfig::class.java)
+        } else {
+            return DataConfig()
+        }
+    }
+
 }

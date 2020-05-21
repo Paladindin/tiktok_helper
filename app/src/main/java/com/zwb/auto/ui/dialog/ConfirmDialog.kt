@@ -66,6 +66,7 @@ class ConfirmDialog : BaseDialog() {
                             OperationDetail.TYPE.PERSONAL_ALL_VIDEO -> operationType = OperationDetail.TYPE.PERSONAL_ALL_VIDEO
                             OperationDetail.TYPE.SAME_CITY_VIDEO -> operationType = OperationDetail.TYPE.SAME_CITY_VIDEO
                             OperationDetail.TYPE.CURRENT_WORK_COMMENTER ->  operationType = OperationDetail.TYPE.CURRENT_WORK_COMMENTER
+                            OperationDetail.TYPE.LIVE ->  operationType = OperationDetail.TYPE.LIVE
 
                             /**
                              * 批量操作
@@ -103,11 +104,19 @@ class ConfirmDialog : BaseDialog() {
             val operationBean = listOperationBean?.get(0)
             if (operationBean is OperationBean){
                 target = operationBean.selectType.desc()
+                when(operationBean.selectType){
+                    OperationDetail.TYPE.SAME_CITY_LIST -> target += "的第一个视频"
+                    OperationDetail.TYPE.WORKS_OF_USER -> target += "的第一个视频"
+                }
             }
         }else if (functionType == FunctionType.PARISE){
             val operationBean = listOperationBean?.get(0)
             if (operationBean is OperationBean){
                 target = operationBean.selectType.desc()
+                when(operationBean.selectType){
+                    OperationDetail.TYPE.PERSONAL_ALL_VIDEO -> target += "的第一个视频"
+                    OperationDetail.TYPE.SAME_CITY_VIDEO -> target += "的第一个视频"
+                }
             }
         }
         sb.append(target).append(",再点击开始按钮")

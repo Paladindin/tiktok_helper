@@ -53,4 +53,12 @@ object UiUtils {
         wm.defaultDisplay.getMetrics(metric)
         return metric.heightPixels
     }
+
+    @JvmStatic
+    fun getScreenHeight2(context: Context): Int {
+        val metric = DisplayMetrics()
+        val wm =context.getSystemService(WINDOW_SERVICE) as WindowManager
+        wm.defaultDisplay.getRealMetrics(metric)
+        return metric.heightPixels
+    }
 }

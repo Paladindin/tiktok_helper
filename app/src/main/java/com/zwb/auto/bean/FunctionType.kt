@@ -80,7 +80,7 @@ enum class FunctionType{
 
         override fun description() = "私/关直播间本场榜/在线用户"
 
-        override fun target() = "直播间的本行榜列表"
+        override fun target() = "直播间的本行榜活在线用户列表"
 
     },
     COMMENT_AREA{

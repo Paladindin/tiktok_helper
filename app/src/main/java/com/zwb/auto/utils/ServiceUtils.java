@@ -26,6 +26,15 @@ public class ServiceUtils {
         return (paramList == null || paramList.size() == 0);
     }
 
+    public static boolean goBack(AccessibilityService service){
+        if (service != null){
+            return service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
+        }else {
+            return false;
+        }
+    }
+
+
     public static boolean clickView(AccessibilityNodeInfo paramAccessibilityNodeInfo) {
         if (paramAccessibilityNodeInfo != null) {
             if (paramAccessibilityNodeInfo.isClickable())
@@ -71,6 +80,14 @@ public class ServiceUtils {
         Path path = new Path();
         path.moveTo(x, y);
         path.lineTo(x, 0);
+        return paramAccessibilityService.dispatchGesture((new GestureDescription.Builder()).addStroke(new GestureDescription.StrokeDescription(path, 0, 200L)).build(), null, null);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static boolean scrollViewVertical(AccessibilityService paramAccessibilityService, int x, int startY,int endY) {
+        Path path = new Path();
+        path.moveTo(x, startY);
+        path.lineTo(x, endY);
         return paramAccessibilityService.dispatchGesture((new GestureDescription.Builder()).addStroke(new GestureDescription.StrokeDescription(path, 0, 200L)).build(), null, null);
     }
 

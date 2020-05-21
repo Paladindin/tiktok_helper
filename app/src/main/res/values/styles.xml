@@ -31,4 +31,6 @@
         <item name="android:windowExitAnimation">@anim/base_dialog_exit_animation</item>
     </style>
 
+    <style name="normalAnimationDialog" parent="android:Animation.Dialog"/>
+
 </resources>

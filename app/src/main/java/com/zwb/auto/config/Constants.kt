@@ -26,4 +26,8 @@ object Constants {
      */
     const val ID_TITLE = "com.ss.android.ugc.aweme:id/title"
 
+
+    const val KEY_TITLE = "key_title"
+    const val KEY_URL = "key_url"
+
 }
