@@ -178,7 +178,20 @@ enum class FunctionType{
 
         override fun target() = "我的粉丝列表或我的关注列表"
 
+    },
+    RANDOM{
+        override fun drawableRes() = R.mipmap.ic_home_assign
+
+        override fun bgColor() = Color.parseColor("#37E5FF")
+
+        override fun title() = "随机抖友"
+
+        override fun description() = "随机私信我的关注或我的粉丝"
+
+        override fun target() = "我的粉丝列表或我的关注列表"
+
     };
+
 
 
 

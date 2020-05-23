@@ -95,6 +95,9 @@ object CommandUtils {
                 FunctionType.BATCH_STAR -> {
                     batchStarCommand(operationType)
                 }
+                FunctionType.RANDOM -> {
+                    randomCommand(OperationDetail.TYPE.MESSAGE, operationTarget)
+                }
             }
         }
         job?.start()
@@ -176,11 +179,11 @@ object CommandUtils {
     /**
      * 给指定用户或我的粉丝或者关注 点击关注(在列表中点赞)
      */
-    suspend fun assignStar(operationTarget: OperationDetail.TYPE?) {
+    suspend fun assignStar(operationTarget: OperationDetail.TYPE?, random: Boolean = false) {
         val rvList =
             ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
         if (rvList.isNullOrEmpty() || rvList.size < 2) return
-        var rv: AccessibilityNodeInfo
+        val rv: AccessibilityNodeInfo
         if (operationTarget == OperationDetail.TYPE.FANS_LIST) {
             rv = rvList[1]
         } else {
@@ -188,11 +191,20 @@ object CommandUtils {
         }
         if (rv != null) {
             Log.e("zwb", "getChildCount " + rv.childCount)
+            var indexList = ArrayList<Int>()
             for (i in 0 until rv.childCount) {
+                indexList.add(i)
+            }
+            if (random) {
+                val randomList = indexList.shuffled()
+                indexList.clear()
+                indexList.addAll(randomList)
+            }
+            for (i in indexList) {
                 val child = rv.getChild(i) ?: continue
-                var listStar = ServiceUtils.findViewByEqualsText(child, "关注")
+                var listStar = ServiceUtils.findViewByContainsText(child, "关注")
                 if (listStar.isNullOrEmpty()) {
-                    listStar = ServiceUtils.findViewByEqualsText(child, "回关")
+                    listStar = ServiceUtils.findViewByContainsText(child, "回关")
                 }
                 if (!listStar.isNullOrEmpty()) {
                     ServiceUtils.clickView(listStar[0])
@@ -212,8 +224,8 @@ object CommandUtils {
     /**
      * 给指定用户的粉丝或者关注发送消息
      */
-    suspend fun assignSendMessage(operationTarget: OperationDetail.TYPE?) {
-        assignStarAndSendMessage(operationTarget, false, true)
+    suspend fun assignSendMessage(operationTarget: OperationDetail.TYPE?, random: Boolean = false) {
+        assignStarAndSendMessage(operationTarget, false, true,random)
     }
 
     /**
@@ -222,7 +234,8 @@ object CommandUtils {
     suspend fun assignStarAndSendMessage(
         operationTarget: OperationDetail.TYPE?,
         isStar: Boolean,
-        isMessage: Boolean
+        isMessage: Boolean,
+        random: Boolean = false
     ) {
         val rvList =
             ServiceUtils.findViewByClassName(service, Constants.CLASS_NAME_RV)
@@ -235,7 +248,16 @@ object CommandUtils {
         }
         rv?.let {
             Log.e("zwb", "getChildCount " + it.childCount)
+            val indexList = ArrayList<Int>()
             for (i in 0 until it.childCount) {
+                indexList.add(i)
+            }
+            if (random) {
+                val randomList = indexList.shuffled()
+                indexList.clear()
+                indexList.addAll(randomList)
+            }
+            for (i in indexList) {
                 val child = it.getChild(i)
                 Log.e("zwb", "Child $i is null" + (child == null))
                 if (child == null || !child.isClickable) continue
@@ -725,12 +747,18 @@ object CommandUtils {
 
         val screenHeight = UiUtils.getScreenHeight2(App.getInstance())
         val navBarHeight = App.getInstance().getNavBarHeight()
-        val clickY = UiUtils.getScreenHeight2(App.getInstance()) - UiUtils.dp2px(App.getInstance(), 25) - navBarHeight
+        val clickY = UiUtils.getScreenHeight2(App.getInstance()) - UiUtils.dp2px(
+            App.getInstance(),
+            25
+        ) - navBarHeight
         val clickX = UiUtils.dp2px(App.getInstance(), 35)
-        Log.e("----","screenHeight ${screenHeight}")
+        Log.e("----", "screenHeight ${screenHeight}")
         Thread {
             Looper.prepare()
-            ToastUtils.showLong(App.getInstance(),"屏幕高度 ${screenHeight} 导航栏高度 ${navBarHeight} \n 点击区域坐标  ${clickX}:${clickY}")
+            ToastUtils.showLong(
+                App.getInstance(),
+                "屏幕高度 ${screenHeight} 导航栏高度 ${navBarHeight} \n 点击区域坐标  ${clickX}:${clickY}"
+            )
             Looper.loop()
         }.start()
         ServiceUtils.clickByGesture(
@@ -1287,4 +1315,22 @@ object CommandUtils {
             }
         }
     }
+
+
+    private suspend fun randomCommand(
+        operationType: OperationDetail.TYPE?,
+        operationTarget: OperationDetail.TYPE?
+    ) {
+        when (operationType) {
+            OperationDetail.TYPE.STAR -> assignStar(operationTarget, true)
+            OperationDetail.TYPE.MESSAGE -> assignSendMessage(operationTarget, true)
+            OperationDetail.TYPE.STAR_AND_MESSAGE -> assignStarAndSendMessage(
+                operationTarget,
+                true,
+                true
+                , true
+            )
+        }
+    }
+
 }

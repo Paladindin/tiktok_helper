@@ -237,6 +237,14 @@ class HomeFragment : BaseFragment() {
                     )
                 )
             }
+            FunctionType.RANDOM -> {
+                listOperation.add(
+                    OperationBean(
+                        OperationDetail.OPERATE_AREA,
+                        OperationDetail.OPERATE_AREA.type()[0]
+                    )
+                )
+            }
         }
         OperationDialog.newInstance(item, listOperation)
             .setOnConfirmClickListener(object : OperationDialog.OnConfirmClickListener {
