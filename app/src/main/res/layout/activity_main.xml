@@ -40,20 +40,20 @@
             android:textColor="@color/color_tab_selector"
             android:textSize="10sp" />
 
-        <RadioButton
-            android:id="@+id/rb_assistant"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:button="@null"
-            android:drawableTop="@drawable/selector_tab_font"
-            android:drawablePadding="5dp"
-            android:gravity="center"
-            android:paddingTop="7dp"
-            android:paddingBottom="3dp"
-            android:text="助手"
-            android:textColor="@color/color_tab_selector"
-            android:textSize="10sp" />
+<!--        <RadioButton-->
+<!--            android:id="@+id/rb_assistant"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:button="@null"-->
+<!--            android:drawableTop="@drawable/selector_tab_font"-->
+<!--            android:drawablePadding="5dp"-->
+<!--            android:gravity="center"-->
+<!--            android:paddingTop="7dp"-->
+<!--            android:paddingBottom="3dp"-->
+<!--            android:text="助手"-->
+<!--            android:textColor="@color/color_tab_selector"-->
+<!--            android:textSize="10sp" />-->
 
         <RadioButton
             android:id="@+id/rb_relationship"
