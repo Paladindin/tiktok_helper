@@ -83,9 +83,11 @@ class MainActivity : BaseActivity() {
 
                 override fun onNext(t: CheckAuthBean) {
                     Log.e("----", "onNext ${t.status}")
-                    App.getInstance().setAuth(t.status == 200)
-                    UserManager.instance.setUserId(t.device?.userId?:-1)
-                    MsgService.subscribe()
+                    if(t.status == 200) {
+                        App.getInstance().setAuth(true)
+                        UserManager.instance.setUserId(t.device?.userId ?: -1)
+                        MsgService.subscribe()
+                    }
                 }
 
                 override fun onError(e: Throwable) {

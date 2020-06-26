@@ -14,6 +14,7 @@ import com.tiktok.auto.config.Constants
 import com.tiktok.auto.push.MsgService
 import com.tiktok.auto.ui.service.AccessService
 import com.tiktok.auto.utils.CommandUtils
+import com.tuolu.subtitle.bean.UserManager
 
 /**
  * Description:
@@ -38,7 +39,7 @@ class App : Application() {
 
     private var mNavBarHeight: Int = 0
 
-    private var isAuth: Boolean = false
+    private var isAuth: Boolean = UserManager.instance.getAuth()
 
     companion object {
         private lateinit var instance: App
@@ -59,6 +60,7 @@ class App : Application() {
 
     fun setAuth(auth: Boolean) {
         isAuth = auth
+        UserManager.instance.setAuth(auth)
     }
 
     fun getAuth(): Boolean {

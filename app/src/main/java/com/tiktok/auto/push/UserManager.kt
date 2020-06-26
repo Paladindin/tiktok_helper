@@ -17,6 +17,7 @@ class UserManager private constructor() {
     companion object {
         const val KEY_USER = "key_user"
         const val KEY_USER_ID = "key_user_id"
+        const val KEY_AUTH = "key_auth"
 
         @JvmStatic
         val instance: UserManager by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -55,6 +56,14 @@ class UserManager private constructor() {
             mUserId = PreferencesUtil.getInt(KEY_USER_ID, -1)
         }
         return mUserId
+    }
+
+    fun setAuth(isAuth: Boolean) {
+        PreferencesUtil.saveValue(KEY_AUTH, isAuth)
+    }
+
+    fun getAuth(): Boolean {
+        return PreferencesUtil.getBoolean(KEY_AUTH, false)
     }
 
     fun logout() {
